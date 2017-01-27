@@ -10,7 +10,7 @@
 //3-digit numbers.
 
 // Note:
-// Brute force solution launching 1000 goroutines outperforms
+// Brute force solution launching 900 goroutines outperforms
 // the same algorithms without goroutines by a factor of
 // five: 14 ms vs. 72 ms.
 
@@ -52,16 +52,18 @@ func main() {
 
 	highestPal := 0
 
-	limit := 1000
+	lowerLimit := 100
+
+	upperLimit := 1000
 
 	c := make(chan int)
 
-	for i := limit - 1; i > 0; i-- {
+	for i := upperLimit - 1; i >= lowerLimit; i-- {
 
 		go getHighestPal(i, c)
 	}
 
-	for i := 0; i < limit; i++ {
+	for i := 0; i < upperLimit-lowerLimit; i++ {
 
 		candidate := <-c
 

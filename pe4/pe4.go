@@ -32,9 +32,11 @@ func main() {
 
 	highestPal := 0
 
-	limit := 1000
+	lowerLimit := 100
 
-	for i := limit - 1; i > 0; i-- {
+	upperLimit := 1000
+
+	for i := upperLimit - 1; i >= lowerLimit; i-- {
 
 		for j := i - 1; j > 0; j-- {
 
