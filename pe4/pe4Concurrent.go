@@ -14,10 +14,15 @@
 // the same algorithms without goroutines by a factor of
 // five: 14 ms vs. 72 ms.
 
+// Improved thanks to advice from rolfl:
+// http://codereview.stackexchange.com/questions/153787/parallel-brute-force-solution-for-project-euler-4-largest-palindrome-product
+
 package main
 
 import "fmt"
 import "time"
+import "strconv"
+import "sync"
 
 func isPalindrome(s string) bool {
 	if len(s) <= 1 {
@@ -31,13 +36,13 @@ func isPalindrome(s string) bool {
 	return isPalindrome(s)
 }
 
-func getHighestPal(i int, c chan int) {
+func getPals(i int, c chan int) {
 
 	for j := i - 1; j > 0; j-- {
 
 		candidate := i * j
 
-		s := fmt.Sprintf("%d", candidate)
+		s := strconv.Itoa(candidate)
 
 		if isPalindrome(s) {
 
@@ -46,29 +51,39 @@ func getHighestPal(i int, c chan int) {
 	}
 }
 
+var wg sync.WaitGroup
+
 func main() {
 
 	start := time.Now()
-
-	highestPal := 0
+	//c := make(chan int)
 
 	lowerLimit := 100
-
 	upperLimit := 1000
+	count := upperLimit - 1 - lowerLimit
 
-	c := make(chan int)
+	palindromes := make(chan int, 1024)
 
-	for i := upperLimit - 1; i >= lowerLimit; i-- {
+	var wg sync.WaitGroup
+	wg.Add(count)
 
-		go getHighestPal(i, c)
+	for i := 0; i < count; i++ {
+		go func(val int) {
+			getPals(val, palindromes)
+			wg.Done()
+		}(i + lowerLimit)
 	}
 
-	for i := 0; i < upperLimit-lowerLimit; i++ {
+	go func() {
+		// wait for all routines to complete
+		wg.Wait()
+		// close the channel to allow the terminal range
+		close(palindromes)
+	}()
 
-		candidate := <-c
-
+	highestPal := 0
+	for candidate := range palindromes {
 		if candidate > highestPal {
-
 			highestPal = candidate
 		}
 	}
